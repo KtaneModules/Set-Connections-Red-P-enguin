@@ -14,10 +14,11 @@ MonoBehaviour:
   id: setConnections
   title: Set Connections
   author: Red Penguin
-  description: "==\r\nNot to be confused with S.E.T. in four dimensions, although
-    this one is S.E.T. with four dimensions.\n\r\nModule Name: Set Connections\nModule
-    ID: setConnections\n\r\nManual: soon :)\n\r\nPlaytesters: myself, probably someone
-    else\n=="
+  description: "==\r\nNot to be confused with S.E.T. with four dimensions, although
+    this is S.E.T. with four dimensions.\n\r\nModule Name: Set Connections\nModule
+    ID: setConnections\n\r\nManual: your moms house\n\r\nPlaytesters: myself, probably
+    someone else\nThanks to Quinn, Obvious, and anyone else I'm forgetting about for
+    helping to find bugs.\n=="
   version: 1
   outputFolder: build
-  previewImage: {fileID: 2800000, guid: 4c807f02a296bc84c8425923d51588a9, type: 3}
+  previewImage: {fileID: 2800000, guid: 25004efdaa6857b488dcb8ea3ed16291, type: 3}

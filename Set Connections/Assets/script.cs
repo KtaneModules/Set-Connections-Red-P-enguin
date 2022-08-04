@@ -25,8 +25,8 @@ public class script : MonoBehaviour {
     public Material selectedMaterial;
     public Material unselectedMaterial;
 
-    bool[,,,] containsShape = new bool[3,3,3,3];
-    bool[,,,] cardVisible = new bool[3,3,3,3];
+    bool[,,,] containsShape = new bool[3, 3, 3, 3];
+    bool[,,,] cardVisible = new bool[3, 3, 3, 3];
     int shapesPlaced = 0;
     int shapesVisible = 0;
     public int[,,,] boardShapes = new int[3, 3, 3, 3];
@@ -34,7 +34,7 @@ public class script : MonoBehaviour {
     public int[,,,] boardColors = new int[3, 3, 3, 3];
     public int[,,,] boardNums = new int[3, 3, 3, 3];
     List<int[]> cluePositions = new List<int[]>();
-    List<int[]> clueShapes = new List<int[]>();
+    public bool[,,,] clueShapes = new bool[3, 3, 3, 3];
 
     //Debugging shapes
     string[] shapeNames = new string[3] { "Capsule", "Diamond", "Squiggle" };
@@ -42,8 +42,8 @@ public class script : MonoBehaviour {
     string[] colorNames = new string[3] { "Red", "Yellow", "Blue" };
 
     string[] shapeLetters = new string[3] { "C", "D", "S" };
-    string[] fillLetters = new string[3] { "□", "▤", "■" };
-    string[] colorLetters = new string[3] { "R","Y","B" };
+    string[] fillLetters = new string[3] { "□", "◪", "■" };
+    string[] colorLetters = new string[3] { "R", "Y", "B" };
 
     //Coordinate names so they're more easily readable
     string[] horizontalNames = new string[3] { "Left", "Middle", "Right" };
@@ -66,8 +66,6 @@ public class script : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        StartCoroutine(WaitingForSolve());
-
         while (shapesPlaced < 81)
         {
             choosePosition:
@@ -80,19 +78,12 @@ public class script : MonoBehaviour {
             int randomFill = Rnd.Range(0, 3);
             int randomColor = Rnd.Range(0, 3);
             int randomNumber = Rnd.Range(0, 3);
-            if (containsShape[randomx, randomy, randomz, randomw])
+            if (containsShape[randomx, randomy, randomz, randomw] || clueShapes[randomNumber, randomColor, randomFill, randomShape])
             {
                 goto choosePosition;
             }
-            for(int i = 0; i < clueShapes.Count; i++)
-            {
-                if(clueShapes[i][0] == randomNumber && clueShapes[i][1] == randomColor && clueShapes[i][2] == randomFill && clueShapes[i][3] == randomShape)
-                {
-                    goto choosePosition;
-                }
-            }
             cluePositions.Add( new int[4] { randomx, randomy, randomz, randomw});
-            clueShapes.Add( new int[4] { randomNumber, randomColor, randomFill, randomShape });
+            clueShapes[randomNumber, randomColor, randomFill, randomShape] = true;
 
             containsShape[randomx, randomy, randomz, randomw] = true;
             cardVisible[randomx, randomy, randomz, randomw] = true;
@@ -104,6 +95,7 @@ public class script : MonoBehaviour {
             shapesPlaced++;
             shapesVisible++;
             DebugMsg("Placing clue " + (boardNums[randomx, randomy, randomz, randomw] + 1) + " " + fillNames[boardFills[randomx, randomy, randomz, randomw]] + " " + colorNames[boardColors[randomx, randomy, randomz, randomw]] + " " + shapeNames[boardShapes[randomx, randomy, randomz, randomw]] + " at " + verticalNames[randomx] + " " + horizontalNames[randomy] + ", " + verticalNames[randomz] + " " + horizontalNames[randomw]);
+            DebugMsg("Number of cards placed: " + shapesPlaced);
             generateBoard(randomx, randomy, randomz, randomw);
         }
 
@@ -159,7 +151,7 @@ public class script : MonoBehaviour {
                 {
                     for (int l = -1; l < 2; l++)
                     {
-                        if (containsShape[(xcoord + i + 3) % 3, (ycoord + j + 3) % 3, (zcoord + k + 3) % 3, (wcoord + l + 3) % 3] /*the space in this direction has a shape*/ && !containsShape[(xcoord - i + 3) % 3, (ycoord - j + 3) % 3, (zcoord - k + 3) % 3, (wcoord - l + 3) % 3] /*there is not a shape in the next space/the opposite direction*/ && !(i == 0 && j == 0 && k == 0 && l == 0) /*it's not my own space*/)
+                        if (containsShape[(xcoord + i + 3) % 3, (ycoord + j + 3) % 3, (zcoord + k + 3) % 3, (wcoord + l + 3) % 3] /*the space in this direction has a shape*/ && !containsShape[(xcoord - i + 3) % 3, (ycoord - j + 3) % 3, (zcoord - k + 3) % 3, (wcoord - l + 3) % 3] /*there is not a shape in the next space/the opposite direction*/)
                         {
                             int newxcoord = (xcoord - i + 3) % 3;
                             int newycoord = (ycoord - j + 3) % 3;
@@ -176,12 +168,13 @@ public class script : MonoBehaviour {
                             boardNums[newxcoord, newycoord, newzcoord, newwcoord] = (boardNums[xcoord, ycoord, zcoord, wcoord] + 3 + (boardNums[xcoord, ycoord, zcoord, wcoord] - boardNums[otherxcoord, otherycoord, otherzcoord, otherwcoord])) % 3;
                             boardColors[newxcoord, newycoord, newzcoord, newwcoord] = (boardColors[xcoord, ycoord, zcoord, wcoord] + 3 + (boardColors[xcoord, ycoord, zcoord, wcoord] - boardColors[otherxcoord, otherycoord, otherzcoord, otherwcoord])) % 3;
                             containsShape[newxcoord, newycoord, newzcoord, newwcoord] = true;
-                            clueShapes.Add(new int[4] { boardNums[newxcoord, newycoord, newzcoord, newwcoord], boardColors[newxcoord, newycoord, newzcoord, newwcoord], boardFills[newxcoord, newycoord, newzcoord, newwcoord], boardShapes[newxcoord, newycoord, newzcoord, newwcoord] });
+                            clueShapes[boardNums[newxcoord, newycoord, newzcoord, newwcoord], boardColors[newxcoord, newycoord, newzcoord, newwcoord], boardFills[newxcoord, newycoord, newzcoord, newwcoord], boardShapes[newxcoord, newycoord, newzcoord, newwcoord]] = true;
                             autosolveCardOrder.Add(new int[4] { newxcoord, newycoord, newzcoord, newwcoord });
 
-                            DebugMsg("Automatically placing " + boardColors[newxcoord, newycoord, newzcoord, newwcoord] + " " + fillNames[boardFills[newxcoord, newycoord, newzcoord, newwcoord]] + " " + colorNames[boardColors[newxcoord, newycoord, newzcoord, newwcoord]] + " " + shapeNames[boardShapes[newxcoord, newycoord, newzcoord, newwcoord]] + " at " + newxcoord + ", " + newycoord + ", " + newzcoord + ", " + newwcoord);
+                            DebugMsgSilent("Automatically placing " + boardColors[newxcoord, newycoord, newzcoord, newwcoord] + " " + fillNames[boardFills[newxcoord, newycoord, newzcoord, newwcoord]] + " " + colorNames[boardColors[newxcoord, newycoord, newzcoord, newwcoord]] + " " + shapeNames[boardShapes[newxcoord, newycoord, newzcoord, newwcoord]] + " at " + newxcoord + ", " + newycoord + ", " + newzcoord + ", " + newwcoord);
                             cardObjects[(newxcoord * 27) + (newycoord * 9) + (newzcoord * 3) + newwcoord].transform.localRotation = Quaternion.Euler(180.0f, 0.0f, 180.0f);
                             shapesPlaced++;
+                            DebugMsgSilent("Number of cards placed: " + shapesPlaced);
                             generateBoard(otherxcoord, otherycoord, otherzcoord, otherwcoord);
                         }
                     }
@@ -190,7 +183,6 @@ public class script : MonoBehaviour {
         }
     }
 
-	// Update is called once per frame
 	void Awake () {
         ModuleId = ModuleIdCounter++;
 
@@ -344,8 +336,9 @@ public class script : MonoBehaviour {
         {
             cardSymbols[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].material.mainTexture = cardTextures[(selectedTraits[3] * 27) + (selectedTraits[2] * 9) + (selectedTraits[1] * 3) + selectedTraits[0]];
             shapesVisible++;
-            if(shapesVisible >= 81)
+            if(shapesVisible >= 54)
             {
+                StartCoroutine(WaitingForSolve());
                 moduleSolved = true;
                 DebugMsg("Module solved.");
             }
@@ -425,7 +418,7 @@ public class script : MonoBehaviour {
      
     private IEnumerator WaitingForSolve()
     {
-        /*while(!moduleSolved)
+        while(!moduleSolved)
         {
             yield return new WaitForSeconds(1f);
         }
@@ -460,8 +453,7 @@ public class script : MonoBehaviour {
             StartCoroutine(SolveFlipCard(solveUnflippedCards[cool][0], solveUnflippedCards[cool][1], solveUnflippedCards[cool][2], solveUnflippedCards[cool][3]));
             solveUnflippedCards.RemoveAt(cool);
             yield return new WaitForSeconds(.1f);
-        }*/
-        yield return new WaitForSeconds(1f);
+        }
     }
 
     private IEnumerator SolveFlipCard(int cardx, int cardy, int cardz, int cardw)
@@ -702,7 +694,7 @@ public class script : MonoBehaviour {
                 shapeButtons[boardShapes[autosolveCardOrder[i][0], autosolveCardOrder[i][1], autosolveCardOrder[i][2], autosolveCardOrder[i][3]]].OnInteract();
 
                 cardButtons[(autosolveCardOrder[i][0] * 27) + (autosolveCardOrder[i][1] * 9) + (autosolveCardOrder[i][2] * 3) + autosolveCardOrder[i][3]].OnInteract();
-                //yield return new WaitForSeconds(.1f);
+                yield return new WaitForSeconds(.05f);
             }
         }
     }
@@ -710,5 +702,9 @@ public class script : MonoBehaviour {
     void DebugMsg(string msg)
     {
         Debug.LogFormat("[Set Connections #{0}] {1}", ModuleId, msg);
+    }
+    void DebugMsgSilent(string msg)
+    {
+        Debug.LogFormat("<Set Connections #{0}> {1}", ModuleId, msg);
     }
 }
