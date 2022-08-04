@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using KModkit;
 using Rnd = UnityEngine.Random;
+using System;
 
 public class script : MonoBehaviour {
     public KMBombInfo bomb;
@@ -353,65 +354,45 @@ public class script : MonoBehaviour {
         audio.PlaySoundAtTransform("flip", transform);
 
         cardInAnimation = true;
-        float swag = 0f;
         Vector3 start = new Vector3(180, 0, 180);
         Vector3 middle = new Vector3(180, 0, 0);
         Vector3 end = new Vector3(180, 0, -180);
-        float xcoord = cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition.x;
-        float ycoord = cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition.y;
-        float zcoord = cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition.z;
+        int cardIx = (cardx * 27) + (cardy * 9) + (cardz * 3) + cardw;
+        float xcoord = cardObjects[cardIx].transform.localPosition.x;
+        float ycoord = 0.01489f;
+        float zcoord = cardObjects[cardIx].transform.localPosition.z;
 
-        while (swag < 1.005f)
+        var duration = 0.5f; // Change this to whatever you want.
+        var elapsed = 0f;
+        while (elapsed < duration)
         {
-            cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localRotation = Quaternion.Euler(Vector3.Lerp(start, middle, swag));
-            cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition = new Vector3(xcoord, ycoord - ((3 * ((swag - 1) * (swag - 1)) - 3) / 100), zcoord);
-
-            yield return new WaitForSeconds(0.01f);
-            swag += .015f;
+            cardObjects[cardIx].transform.localPosition = new Vector3(xcoord, Easing.InOutQuad(elapsed, ycoord, ycoord + 0.015f, duration), zcoord);
+            cardObjects[cardIx].transform.localEulerAngles = new Vector3(180f, 0f, Easing.InOutQuad(elapsed, 180f, 0f, duration));
+            yield return null;
+            elapsed += Time.deltaTime;
         }
-
+        elapsed = 0f;
+        if (incorrect)
+            GetComponent<KMBombModule>().HandleStrike();
+        while (elapsed < duration)
+        {
+            cardObjects[cardIx].transform.localPosition = new Vector3(xcoord, Easing.InOutQuad(elapsed, ycoord + 0.015f, ycoord, duration), zcoord);
+            if (incorrect)
+                cardObjects[cardIx].transform.localEulerAngles = new Vector3(180f, 0f, Easing.InOutQuad(elapsed, 0f, -180f, duration));
+            yield return null;
+            elapsed += Time.deltaTime;
+        }
+        cardObjects[cardIx].transform.localPosition = new Vector3(xcoord, ycoord, zcoord);
+        cardObjects[cardIx].transform.localEulerAngles = new Vector3(180f, 0f, incorrect ? 180f : 0f);
         if (incorrect)
         {
-            GetComponent<KMBombModule>().HandleStrike();
-            swag = 0f;
-
-            while (swag < 1.005f)
-            {
-                cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localRotation = Quaternion.Euler(Vector3.Lerp(middle, end, swag));
-                cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition = new Vector3(xcoord, ycoord - ((3 * ((swag) * (swag)) - 3) / 100), zcoord);
-                if (cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition.y < ycoord)
-                {
-                    cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition = new Vector3(xcoord, ycoord, zcoord);
-                }
-
-                yield return new WaitForSeconds(0.01f);
-                swag += .015f;
-            }
-            cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition = new Vector3(xcoord, ycoord, zcoord);
-            plane.transform.localScale = new Vector3(0.00349359f, 1f, 0.002083334f);
-
             cardVisible[cardx, cardy, cardz, cardw] = false;
+            plane.transform.localScale = new Vector3(0.00349359f, 1f, 0.002083334f);
         }
         else
         {
-            swag = 0f;
-
-            while (swag < 1.005f)
-            {
-                cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition = new Vector3(xcoord, ycoord - ((3 * ((swag) * (swag)) - 3) / 100), zcoord);
-                if (cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition.y < ycoord)
-                {
-                    cardObjects[(cardx * 27) + (cardy * 9) + (cardz * 3) + cardw].transform.localPosition = new Vector3(xcoord, ycoord, zcoord);
-                }
-
-                yield return new WaitForSeconds(0.01f);
-                swag += .015f;
-            }
-
             if (moduleSolved)
-            {
                 GetComponent<KMBombModule>().HandlePass();
-            }
             cardInAnimation = false;
         }
     }
